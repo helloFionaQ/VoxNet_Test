@@ -16,6 +16,8 @@ import lasagne
 import voxnet
 from voxnet import npytar
 
+import ringdata
+import config
 #import pyvox
 
 def make_training_functions(cfg, model):
@@ -26,7 +28,7 @@ def make_training_functions(cfg, model):
     batch_index = T.iscalar('batch_index')
     # bct01
     #x是五维向量 y是一维
-    X = T.TensorType('float32', [False]*5)('X')
+    X = T.TensorType('float32', [False]*4)('X')
     y = T.TensorType('int32', [False]*1)('y')
     out_shape = lasagne.layers.get_output_shape(l_out)
     #log.info('output_shape = {}'.format(out_shape))
@@ -60,7 +62,7 @@ def make_training_functions(cfg, model):
 
 
     #shared相当于一个全局变量
-    X_shared = lasagne.utils.shared_empty(5, dtype='float32')
+    X_shared = lasagne.utils.shared_empty(4, dtype='float32')
     y_shared = lasagne.utils.shared_empty(1, dtype='float32')
 
     dout_fn = theano.function([X], dout)
@@ -126,7 +128,9 @@ def data_loader(cfg, fname):
         yc.append(int(name.split('.')[0])-1)
         if len(yc) == chunk_size:
             xc = jitter_chunk(xc, cfg)
-            yield (2.0*xc - 1.0, np.asarray(yc, dtype=np.float32))
+            xc,cor=ringdata.load_data(xc)
+            yield (np.asarray(xc, dtype=np.float32), np.asarray(yc, dtype=np.float32),
+                   np.asarray(cor,dtype=np.float32))
             yc = []
             xc.fill(0)
     if len(yc) > 0:
@@ -138,35 +142,29 @@ def data_loader(cfg, fname):
             yc = yc + yc[:(new_size-len(yc))]
 
         xc = jitter_chunk(xc, cfg)
-        yield (2.0*xc - 1.0, np.asarray(yc, dtype=np.float32))
+        xc, cor = ringdata.load_data(xc)
+        yield (np.asarray(xc, dtype=np.float32), np.asarray(yc, dtype=np.float32),
+                   np.asarray(cor,dtype=np.float32))
 
-def main(args):
-    # 加载配置文件
-    config_module = imp.load_source('config', args.config_path)
+def main():
+    fname = r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/shapenet10_train.tar'
+    metrics_fname = 'metrics.jsonl'
     # cfg文件记录属性
-    cfg = config_module.cfg
-
+    cfg = config.cfg
     # model里面是卷积层等网络模型
-    model = config_module.get_model()
-
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s| %(message)s')
-    logging.info('Metrics will be saved to {}'.format(args.metrics_fname))
-
-    mlog = voxnet.metrics_logging.MetricsLogger(args.metrics_fname, reinitialize=True)
-
-    logging.info('Compiling theano functions...')
+    model = config.get_model()
+    mlog = voxnet.metrics_logging.MetricsLogger(metrics_fname, reinitialize=True)
     tfuncs, tvars = make_training_functions(cfg, model)
-
     logging.info('Training...')
     itr = 0
     last_checkpoint_itr = 0
-    loader = (data_loader(cfg, args.training_fname))
+    loader = (data_loader(cfg, fname))
 
     # 设置迭代
     # xrange的用法与range相同，即xrange([start,] stop[, step])根据start与stop指定的范围以及step设定的步长,
     # 他所不同的是xrange并不是生成序列，而是作为一个生成器。即他的数据生成一个取出一个。
     for epoch in xrange(cfg['max_epochs']):
-        loader = (data_loader(cfg, args.training_fname))
+        loader = (data_loader(cfg, fname))
 
         for x_shared, y_shared in loader:
             num_batches = len(x_shared)//cfg['batch_size']
@@ -197,30 +195,13 @@ def main(args):
 
 
     logging.info('training done')
-    voxnet.checkpoints.save_weights('weights1.npz', model['l_out'],
+    voxnet.checkpoints.save_weights('weights_test.npz', model['l_out'],
                                     {'itr': itr, 'ts': time.time()})
 
-
-
-# 尝试取消控制台输入
-class noneParser():
-    config_path ='config/shapenet10.py '
-    training_fname ='shapenet10_train.tar'
 
 
 
 
 if __name__=='__main__':
-
-    parser = argparse.ArgumentParser()
-
-    #  python train.py config/shapenet10.py shapenet10_train.tar
-    parser.add_argument('config_path', type=Path, help='config .py file')
-    parser.add_argument('training_fname', type=Path, help='training .tar file')
-    parser.add_argument('--metrics-fname', type=Path, default='metrics.jsonl', help='name of metrics file')
-
-    args = parser.parse_args()
-
-    # args=noneParser()
-    main(args)
+    main()
 
