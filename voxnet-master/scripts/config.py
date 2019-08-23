@@ -1,4 +1,5 @@
 import lasagne
+import voxnet
 from voxnet import activations
 import theano.tensor as T
 
@@ -56,6 +57,7 @@ def get_model():
         stride=(5, 1),
         pad='valid',
         name='conv1',
+        W=voxnet.init.Prelu(),
         # nonlinearity=activations.leaky_relu_001
 
     )
@@ -66,6 +68,7 @@ def get_model():
         stride=(3, 1),
         pad='valid',
         name='conv2',
+        W=voxnet.init.Prelu(),
         # nonlinearity = activations.leaky_relu_001
     )
     l_conv3 = lasagne.layers.Conv2DLayer(
@@ -75,6 +78,7 @@ def get_model():
         stride=(3, 1),
         pad='valid',
         name='conv3',
+        W=voxnet.init.Prelu(),
         # nonlinearity = activations.leaky_relu_001
     )
     l_conv4 = lasagne.layers.Conv2DLayer(
@@ -84,11 +88,12 @@ def get_model():
         stride=(2, 1),
         pad='valid',
         name='conv4',
+        W=voxnet.init.Prelu(),
         # nonlinearity=activations.leaky_relu_001
     )
     l_shape1 = lasagne.layers.reshape(
         incoming=l_conv4,
-        shape=((batch_size * n_levels, 1, 32)),
+        shape=((-1, 1, 32)),
         name='shape1'
     )
     l_pool1 = lasagne.layers.MaxPool1DLayer(
@@ -144,5 +149,10 @@ def get_model():
         W=lasagne.init.Normal(std=0.01),
         name='fc5'
 
+    )
+    l_shape3 =lasagne.layers.reshape(
+        incoming=l_fc5,
+        shape=((batch_size, -1)),
+        name='shape2'
     )
     return {'l_in': l_in, 'l_out': l_fc5}

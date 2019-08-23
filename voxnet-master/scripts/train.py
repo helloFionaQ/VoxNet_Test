@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-
 import argparse
 import imp
 import time
@@ -18,23 +17,24 @@ from voxnet import npytar
 
 import ringdata
 import config
-#import pyvox
+
+
+# import pyvox
 
 def make_training_functions(cfg, model):
-
     # 这里l_out是model的输出层
     l_out = model['l_out']
-    #声明一个Batch——index的变量
+    # 声明一个Batch——index的变量
     batch_index = T.iscalar('batch_index')
     # bct01
-    #x是五维向量 y是一维
-    X = T.TensorType('float32', [False]*4)('X')
-    y = T.TensorType('int32', [False]*1)('y')
+    # x是五维向量 y是一维
+    X = T.TensorType('float32', [False] * 4)('X')
+    y = T.TensorType('int32', [False] * 1)('y')
     out_shape = lasagne.layers.get_output_shape(l_out)
-    #log.info('output_shape = {}'.format(out_shape))
+    # log.info('output_shape = {}'.format(out_shape))
 
     # 切片函数 参数：start ，stop[step] 用法arr[batch_slice]
-    batch_slice = slice(batch_index*cfg['batch_size'], (batch_index+1)*cfg['batch_size'])
+    batch_slice = slice(batch_index * cfg['batch_size'], (batch_index + 1) * cfg['batch_size'])
 
     # 用给定的输入和网络模型 做输出
     out = lasagne.layers.get_output(l_out, X)
@@ -43,7 +43,7 @@ def make_training_functions(cfg, model):
     # 获取训练网络的所有的参数 一般用于更新网络表达式
     params = lasagne.layers.get_all_params(l_out)
     l2_norm = lasagne.regularization.regularize_network_params(l_out,
-            lasagne.regularization.l2)
+                                                               lasagne.regularization.l2)
     # 判断 x是不是某类型 （实例，类型名） dict 字典
     if isinstance(cfg['learning_rate'], dict):
         # share将变量共享为全局变量 ，在多个函数中公用
@@ -51,17 +51,16 @@ def make_training_functions(cfg, model):
     else:
         learning_rate = theano.shared(np.float32(cfg['learning_rate']))
 
-    softmax_out = T.nnet.softmax( out )
+    softmax_out = T.nnet.softmax(out)
     loss = T.cast(T.mean(T.nnet.categorical_crossentropy(softmax_out, y)), 'float32')
-    pred = T.argmax( dout, axis=1 )
-    error_rate = T.cast( T.mean( T.neq(pred, y) ), 'float32' )
+    pred = T.argmax(dout, axis=1)
+    error_rate = T.cast(T.mean(T.neq(pred, y)), 'float32')
     # 正则化损失函数 l2使权值足够小
-    reg_loss = loss + cfg['reg']*l2_norm
+    reg_loss = loss + cfg['reg'] * l2_norm
     # 动量梯度下降 更新params
     updates = lasagne.updates.momentum(reg_loss, params, learning_rate, cfg['momentum'])
 
-
-    #shared相当于一个全局变量
+    # shared相当于一个全局变量
     X_shared = lasagne.utils.shared_empty(4, dtype='float32')
     y_shared = lasagne.utils.shared_empty(1, dtype='float32')
 
@@ -69,32 +68,32 @@ def make_training_functions(cfg, model):
     pred_fn = theano.function([X], pred)
 
     update_iter = theano.function([batch_index], reg_loss,
-            updates=updates, givens={
+                                  updates=updates, givens={
             X: X_shared[batch_slice],
-            y: T.cast( y_shared[batch_slice], 'int32'),
+            y: T.cast(y_shared[batch_slice], 'int32'),
         })
 
     error_rate_fn = theano.function([batch_index], error_rate, givens={
-            X: X_shared[batch_slice],
-            y: T.cast( y_shared[batch_slice], 'int32'),
-        })
-    tfuncs = {'update_iter':update_iter,
-             'error_rate':error_rate_fn,
-             'dout' : dout_fn,
-             'pred' : pred_fn,
-            }
-    tvars = {'X' : X,
-             'y' : y,
-             'X_shared' : X_shared,
-             'y_shared' : y_shared,
-             'batch_slice' : batch_slice,
-             'batch_index' : batch_index,
-             'learning_rate' : learning_rate,
-            }
+        X: X_shared[batch_slice],
+        y: T.cast(y_shared[batch_slice], 'int32'),
+    })
+    tfuncs = {'update_iter': update_iter,
+              'error_rate': error_rate_fn,
+              'dout': dout_fn,
+              'pred': pred_fn,
+              }
+    tvars = {'X': X,
+             'y': y,
+             'X_shared': X_shared,
+             'y_shared': y_shared,
+             'batch_slice': batch_slice,
+             'batch_index': batch_index,
+             'learning_rate': learning_rate,
+             }
     return tfuncs, tvars
 
 
-#抖动加强
+# 抖动加强
 def jitter_chunk(src, cfg):
     dst = src.copy()
     # 二项分布
@@ -110,41 +109,47 @@ def jitter_chunk(src, cfg):
     for axis, shift in enumerate(shift_ijk):
         if shift != 0:
             # beware wraparound
-            dst = np.roll(dst, shift, axis+2)
+            dst = np.roll(dst, shift, axis + 2)
     return dst
+
+
+'''
+output : x, y, levels, chunk_size
+'''
+
 
 # 读取数据
 def data_loader(cfg, fname):
-
     dims = cfg['dims']
     # the number for reading each time
-    chunk_size = cfg['batch_size']*cfg['batches_per_chunk']
-    xc = np.zeros((chunk_size, cfg['n_channels'],)+dims, dtype=np.float32)
+    chunk_size = cfg['batch_size'] * cfg['batches_per_chunk']
+    xc = np.zeros((chunk_size, cfg['n_channels'],) + dims, dtype=np.float32)
     reader = npytar.NpyTarReader(fname)
     yc = []
     for ix, (x, name) in enumerate(reader):
         cix = ix % chunk_size
         xc[cix] = x.astype(np.float32)
-        yc.append(int(name.split('.')[0])-1)
+        yc.append(int(name.split('.')[0]) - 1)
         if len(yc) == chunk_size:
             xc = jitter_chunk(xc, cfg)
-            xc,cor=ringdata.load_data(xc)
+            xc, levels = ringdata.load_data(xc)
             yield (np.asarray(xc, dtype=np.float32), np.asarray(yc, dtype=np.float32),
-                   np.asarray(cor,dtype=np.float32))
+                   np.asarray(levels, dtype=np.float32), chunk_size)
             yc = []
             xc.fill(0)
     if len(yc) > 0:
         # pad to nearest multiple of batch_size
-        if len(yc)%cfg['batch_size'] != 0:
-            new_size = int(np.ceil(len(yc)/float(cfg['batch_size'])))*cfg['batch_size']
+        if len(yc) % cfg['batch_size'] != 0:
+            new_size = int(np.ceil(len(yc) / float(cfg['batch_size']))) * cfg['batch_size']
             xc = xc[:new_size]
-            xc[len(yc):] = xc[:(new_size-len(yc))]
-            yc = yc + yc[:(new_size-len(yc))]
+            xc[len(yc):] = xc[:(new_size - len(yc))]
+            yc = yc + yc[:(new_size - len(yc))]
 
         xc = jitter_chunk(xc, cfg)
-        xc, cor = ringdata.load_data(xc)
+        xc, levels = ringdata.load_data(xc)
         yield (np.asarray(xc, dtype=np.float32), np.asarray(yc, dtype=np.float32),
-                   np.asarray(cor,dtype=np.float32))
+               np.asarray(levels, dtype=np.float32), new_size)
+
 
 def main():
     fname = r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/shapenet10_train.tar'
@@ -166,15 +171,27 @@ def main():
     for epoch in xrange(cfg['max_epochs']):
         loader = (data_loader(cfg, fname))
 
-        for x_shared, y_shared in loader:
-            num_batches = len(x_shared)//cfg['batch_size']
+        for x_shared, y_shared, levels, chunk_size in loader:
+            num_batches = chunk_size // cfg['batch_size']
+            x_n = tfuncs['dout'](x_shared)
+            d = cfg['dims'][0]
+            rf = x_n.shap[-1]
+            for i in range(chunk_size):
+                x_t = np.zeros((d, rf), dtype=np.float32)
+                x_t -= x_t
+                i_s = (d - levels[i]) // 2
+                i_e = i_s+levels[i]
+                x_t[i_s,i_e]=x_n[:levels[i]]
+                # TODO level features
+                x_n=x_n[levels[i]:]
+            np.array(())
             tvars['X_shared'].set_value(x_shared, borrow=True)
             tvars['y_shared'].set_value(y_shared, borrow=True)
-            lvs,accs = [],[]
+            lvs, accs = [], []
             for bi in xrange(num_batches):
                 lv = tfuncs['update_iter'](bi)
                 lvs.append(lv)
-                acc = 1.0-tfuncs['error_rate'](bi)
+                acc = 1.0 - tfuncs['error_rate'](bi)
                 accs.append(acc)
                 itr += 1
             loss, acc = float(np.mean(lvs)), float(np.mean(acc))
@@ -183,25 +200,20 @@ def main():
 
             if isinstance(cfg['learning_rate'], dict) and itr > 0:
                 keys = sorted(cfg['learning_rate'].keys())
-                new_lr = cfg['learning_rate'][keys[np.searchsorted(keys, itr)-1]]
+                new_lr = cfg['learning_rate'][keys[np.searchsorted(keys, itr) - 1]]
                 lr = np.float32(tvars['learning_rate'].get_value())
                 if not np.allclose(lr, new_lr):
                     logging.info('decreasing learning rate from {} to {}'.format(lr, new_lr))
                     tvars['learning_rate'].set_value(np.float32(new_lr))
-            if itr-last_checkpoint_itr > cfg['checkpoint_every_nth']:
+            if itr - last_checkpoint_itr > cfg['checkpoint_every_nth']:
                 voxnet.checkpoints.save_weights('weights.npz', model['l_out'],
                                                 {'itr': itr, 'ts': time.time()})
                 last_checkpoint_itr = itr
-
 
     logging.info('training done')
     voxnet.checkpoints.save_weights('weights_test.npz', model['l_out'],
                                     {'itr': itr, 'ts': time.time()})
 
 
-
-
-
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
-
