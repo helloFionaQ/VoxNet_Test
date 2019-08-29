@@ -15,8 +15,10 @@ from sklearn import metrics as skm
 import voxnet
 
 # npy tar的类型转换
+from statsmodels.sandbox.distributions.examples.matchdist import high
 from voxnet import npytar
 
+exception_verbosity=high
 
 def make_test_functions(cfg, model):
     l_out = model['l_out']

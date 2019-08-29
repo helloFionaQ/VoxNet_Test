@@ -18,7 +18,7 @@ import ringdata
 from voxnet import npytar
 
 #import pyvox
-fname = r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/shapenet10_train.tar'
+fname = r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_level15_nojitter.tar'
 weight_name='weights_ring.npz'
 metric_fname='metrics.jsonl'
 
@@ -121,7 +121,7 @@ def data_loader(cfg):
     dims = cfg['dims']
     # the number for reading each time
     chunk_size = cfg['batch_size']*cfg['batches_per_chunk']
-    xc = np.zeros((chunk_size, cfg['n_channels'],)+dims, dtype=np.float32)
+    xc = np.zeros((chunk_size, cfg['n_channels'],cfg['n_levels'],cfg['n_rings'],3), dtype=np.float32)
 
     reader = npytar.NpyTarReader(fname)
     yc = []
@@ -129,10 +129,9 @@ def data_loader(cfg):
         cix = ix % chunk_size
         xc[cix] = x.astype(np.float32)
         yc.append(int(name.split('.')[0])-1)
+
         if len(yc) == chunk_size:
-            xc = jitter_chunk(xc, cfg)
-            x_out = ringdata.load_data(xc)
-            yield (x_out, np.asarray(yc, dtype=np.float32))
+            yield (xc, np.asarray(yc, dtype=np.float32))
             yc = []
             xc.fill(0)
     if len(yc) > 0:
@@ -141,11 +140,8 @@ def data_loader(cfg):
             new_size = int(np.ceil(len(yc)/float(cfg['batch_size'])))*cfg['batch_size']
             xc = xc[:new_size]
             xc[len(yc):] = xc[:(new_size-len(yc))]
-            yc = yc + yc[:(new_size-len(yc))]
-
-        xc = jitter_chunk(xc, cfg)
-        x_out = ringdata.load_data(xc)
-        yield (x_out, np.asarray(yc, dtype=np.float32))
+            yc = yc + yc[:(new_size - len(yc))]
+        yield (xc, np.asarray(yc, dtype=np.float32))
 
 
 def main():
@@ -169,7 +165,6 @@ def main():
 
         for x_shared, y_shared in loader:
             num_batches = len(x_shared)//cfg['batch_size']
-            print 'numbatches',num_batches
             tvars['X_shared'].set_value(x_shared, borrow=True)
             tvars['y_shared'].set_value(y_shared, borrow=True)
             lvs,accs = [],[]
@@ -198,7 +193,7 @@ def main():
 
     print 'training done'
     end_time=time.time()
-    print 'running time : ',(end_time-start_time)/60.0,'mins'
+    print 'running time : ',end_time-start_time
     voxnet.checkpoints.save_weights(weight_name, model['l_out'],
                                     {'itr': itr, 'ts': time.time()})
 
