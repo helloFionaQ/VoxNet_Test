@@ -1,6 +1,11 @@
 import lasagne
 import theano.tensor as T
-lr_schedule = { 0: 0.001,
+lr_schedule1 = { 0: 0.001,
+                60000: 0.0001,
+                400000: 0.00005,
+                600000: 0.00001,
+                }
+lr_schedule = { 0: 0.002,
                 60000: 0.0001,
                 400000: 0.00005,
                 600000: 0.00001,
@@ -41,7 +46,7 @@ def get_model():
         tuple(cfg['dims']), cfg['n_channels'], cfg['n_classes'],cfg['n_levels'], cfg['n_rings'], cfg['dim_value']
     batch_size = cfg['batch_size']
     n_filters=cfg[' n_filters']
-    shape = (None, 1, n_levels,n_rings, 3)
+    shape = (None, 1, n_levels,n_rings, 2)
     fw=conv_size['size99']
 
     l_in = lasagne.layers.InputLayer(shape=shape)
@@ -61,14 +66,14 @@ def get_model():
     '''
     l_shape =lasagne.layers.reshape(
         incoming=l_in,
-        shape= ((-1, 1,n_rings,3)),
+        shape= ((-1, 1,n_rings,2)),
         name= 'shape'
     )
 
     l_conv=lasagne.layers.Conv2DLayer(
         incoming=l_shape,
         num_filters=n_filters,
-        filter_size=(1, 3),
+        filter_size=(1, 2),
         stride=(1,1),
         pad='valid',
         name= 'conv0',
@@ -137,15 +142,15 @@ def get_model():
     )
     l_ds1=lasagne.layers.DimshuffleLayer(
         incoming=l_conv5,
-        pattern=(0,3,2,1),
+        pattern=(0,3,1,2),
         name='ds1'
     )
     l_pool1=lasagne.layers.MaxPool2DLayer(
         incoming=l_ds1,
-        pool_size=(n_rings,1),
+        pool_size=(512,1),
         name='pool1'
     )
-    # -------------shape n*1*512------------------------
+    # -------------shape n*1*nrings------------------------
 
     l_fc1 = lasagne.layers.DenseLayer(
         incoming=l_pool1,
@@ -180,20 +185,20 @@ def get_model():
     '''
     l_shape2 = lasagne.layers.reshape(
         incoming=l_pool1,
-        shape=((-1, 512,n_levels,1)),
+        shape=((-1,n_levels,n_rings)),
         name='shape2'
     )
-    l_conv11=lasagne.layers.Conv2DLayer(
-        incoming=l_shape2,
-        num_filters=n_filters,
-        filter_size=(1, 1),
-        stride=(1,1),
-        pad='valid',
-        name='conv11',
-        # nonlinearity=activations.leaky_relu_001
-    )
+    # l_conv11=lasagne.layers.Conv2DLayer(
+    #     incoming=l_shape2,
+    #     num_filters=n_filters,
+    #     filter_size=(3, 1),
+    #     stride=(1,1),
+    #     pad='valid',
+    #     name='conv11',
+    #     # nonlinearity=activations.leaky_relu_001
+    # )
     l_fc10 = lasagne.layers.DenseLayer(
-        incoming=l_conv11,
+        incoming=l_shape2,
         num_units=1024,
         W=lasagne.init.Normal(std=0.01),
         name= 'fc10',

@@ -18,8 +18,8 @@ import ringdata
 from voxnet import npytar
 
 #import pyvox
-fname = r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_level15_nojitter.tar'
-weight_name='weights_ring.npz'
+fname = r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_level15_nj_nz.tar'
+weight_name='weights_level15_nj_nz.npz'
 metric_fname='metrics.jsonl'
 
 def make_training_functions(cfg, model):
@@ -121,7 +121,7 @@ def data_loader(cfg):
     dims = cfg['dims']
     # the number for reading each time
     chunk_size = cfg['batch_size']*cfg['batches_per_chunk']
-    xc = np.zeros((chunk_size, cfg['n_channels'],cfg['n_levels'],cfg['n_rings'],3), dtype=np.float32)
+    xc = np.zeros((chunk_size, cfg['n_channels'],cfg['n_levels'],cfg['n_rings'],2), dtype=np.float32)
 
     reader = npytar.NpyTarReader(fname)
     yc = []
@@ -193,7 +193,7 @@ def main():
 
     print 'training done'
     end_time=time.time()
-    print 'running time : ',end_time-start_time
+    print 'running time : ',(end_time-start_time)/60.0/60.0,'hours'
     voxnet.checkpoints.save_weights(weight_name, model['l_out'],
                                     {'itr': itr, 'ts': time.time()})
 
