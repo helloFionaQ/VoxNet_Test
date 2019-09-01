@@ -1,18 +1,25 @@
 import lasagne
 import theano.tensor as T
-lr_schedule1 = { 0: 0.001,
+lr_schedule3d = { 0: 0.001,
+                60000: 0.0001,
+                400000: 0.00005,
+                600000: 0.00001,
+                }
+lr_schedule2d = { 0: 0.002,
                 60000: 0.0001,
                 400000: 0.00005,
                 600000: 0.00001,
                 }
 lr_schedule = { 0: 0.002,
-                60000: 0.0001,
-                400000: 0.00005,
-                600000: 0.00001,
+                60000: 0.001,
+                400000: 0.0005,
+                600000: 0.0001,
                 }
+metric_1D={
 
+}
 cfg={
-    'dims' : (32,32,32),
+    'dims' : 1,
     'batch_size' : 32,
     'batches_per_chunk': 64,
     'n_channels' : 1,
@@ -21,7 +28,6 @@ cfg={
     'n_rings' : 99,
     'dim_value' : 3,
     'stride_z' : 1,
-
     'learning_rate' : lr_schedule,
     'reg' : 0.001,
     'momentum' : 0.9,
@@ -42,11 +48,12 @@ conv_size={
 }
 
 def get_model():
-    dims, n_channels, n_classes, n_levels, n_rings , dim_value = \
-        tuple(cfg['dims']), cfg['n_channels'], cfg['n_classes'],cfg['n_levels'], cfg['n_rings'], cfg['dim_value']
+    n_channels, n_classes, n_levels, n_rings , dim_value = \
+         cfg['n_channels'], cfg['n_classes'],cfg['n_levels'], cfg['n_rings'], cfg['dim_value']
     batch_size = cfg['batch_size']
+    dims=cfg['dims']
     n_filters=cfg[' n_filters']
-    shape = (None, 1, n_levels,n_rings, 2)
+    shape = (None, 1, n_levels,n_rings, dims)
     fw=conv_size['size99']
 
     l_in = lasagne.layers.InputLayer(shape=shape)
@@ -66,14 +73,14 @@ def get_model():
     '''
     l_shape =lasagne.layers.reshape(
         incoming=l_in,
-        shape= ((-1, 1,n_rings,2)),
+        shape= ((-1, 1,n_rings,dims)),
         name= 'shape'
     )
 
     l_conv=lasagne.layers.Conv2DLayer(
         incoming=l_shape,
         num_filters=n_filters,
-        filter_size=(1, 2),
+        filter_size=(1, dims),
         stride=(1,1),
         pad='valid',
         name= 'conv0',
