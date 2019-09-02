@@ -5,21 +5,36 @@ lr_schedule3d = { 0: 0.001,
                 400000: 0.00005,
                 600000: 0.00001,
                 }
-lr_schedule2d = { 0: 0.002,
+lr_schedule = { 0: 0.002,
                 60000: 0.0001,
                 400000: 0.00005,
                 600000: 0.00001,
                 }
-lr_schedule = { 0: 0.002,
+lr_schedule2D = { 0: 0.002,
                 60000: 0.001,
                 400000: 0.0005,
                 600000: 0.0001,
                 }
-metric_1D={
+metric =[
+    {'dims' : 1,
+    'test_fname' : r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_1D_test.tar',
+    'train_fname': r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_1D_train.tar',
+    'weight_fname' : 'weights_1D.tar.npz',
+    'metric_fname' :'metrics_1D.tar.jsonl'},
 
-}
+    {'dims' : 2,
+    'test_fname' : r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_2D_test.tar',
+    'train_fname': r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_2D_train.tar',
+    'weight_fname' : 'weights_2D.tar.npz',
+    'metric_fname' :'metrics_2D.tar.jsonl'},
+
+    {'dims' : 3,
+    'test_fname' : r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_1D_test.tar',
+    'train_fname': r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_level15_nj_dis.tar',
+    'weight_fname' : 'weights_nojitter_1D.tar.npz',
+    'metric_fname' :'metrics_nojitter_1D.tar.jsonl'},
+]
 cfg={
-    'dims' : 1,
     'batch_size' : 32,
     'batches_per_chunk': 64,
     'n_channels' : 1,
@@ -51,7 +66,8 @@ def get_model():
     n_channels, n_classes, n_levels, n_rings , dim_value = \
          cfg['n_channels'], cfg['n_classes'],cfg['n_levels'], cfg['n_rings'], cfg['dim_value']
     batch_size = cfg['batch_size']
-    dims=cfg['dims']
+
+    dims=metric[1]['dims'] # change the index when changing input dims
     n_filters=cfg[' n_filters']
     shape = (None, 1, n_levels,n_rings, dims)
     fw=conv_size['size99']
@@ -159,34 +175,6 @@ def get_model():
     )
     # -------------shape n*1*nrings------------------------
 
-    l_fc1 = lasagne.layers.DenseLayer(
-        incoming=l_pool1,
-        num_units=128,
-        W=lasagne.init.Normal(std=0.01),
-        name= 'fc1'
-
-    )
-    l_fc2 = lasagne.layers.DenseLayer(
-        incoming=l_fc1,
-        num_units=128,
-        W=lasagne.init.Normal(std=0.01),
-        name= 'fc2'
-
-    )
-    l_fc3 = lasagne.layers.DenseLayer(
-        incoming=l_fc2,
-        num_units=n_classes,
-        W=lasagne.init.Normal(std=0.01),
-        # nonlinearity=T.nnet.sigmoid,
-        name= 'fc3'
-
-    )
-    # l_bn1 = lasagne.layers.BatchNormLayer(
-    #     incoming= l_fc2,
-    #     name= 'bn1'
-    # )
-
-
     '''
     Model level feature abstracted
     '''
@@ -232,9 +220,5 @@ def get_model():
         name= 'fc13'
 
     )
-    l_shape3= lasagne.layers.reshape(
-        incoming=l_fc13,
-        shape=((batch_size, -1)),
-        name='shape3'
-    )
+
     return {'l_in':l_in,'l_out':l_fc13}
