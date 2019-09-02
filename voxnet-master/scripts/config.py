@@ -1,38 +1,39 @@
 import lasagne
 import theano.tensor as T
-lr_schedule3d = { 0: 0.001,
-                60000: 0.0001,
-                400000: 0.00005,
-                600000: 0.00001,
-                }
-lr_schedule = { 0: 0.002,
+lr_schedule3D = { 0: 0.001,
                 60000: 0.0001,
                 400000: 0.00005,
                 600000: 0.00001,
                 }
 lr_schedule2D = { 0: 0.002,
+                60000: 0.0001,
+                400000: 0.00005,
+                600000: 0.00001,
+                }
+lr_schedule1D = { 0: 0.002,
                 60000: 0.001,
                 400000: 0.0005,
                 600000: 0.0001,
                 }
+lr_schedule=lr_schedule2D
 metric =[
     {'dims' : 1,
     'test_fname' : r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_1D_test.tar',
     'train_fname': r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_1D_train.tar',
-    'weight_fname' : 'weights_1D.tar.npz',
-    'metric_fname' :'metrics_1D.tar.jsonl'},
+    'weight_fname' : 'weights_1D.npz',
+    'metric_fname' :'metrics_1D.jsonl'},
 
     {'dims' : 2,
     'test_fname' : r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_2D_test.tar',
     'train_fname': r'/home/haha/Documents/PythonPrograms/VoxNet_Test/voxnet-master/scripts/ring_datas/ringdata_2D_train.tar',
-    'weight_fname' : 'weights_2D.tar.npz',
-    'metric_fname' :'metrics_2D.tar.jsonl'},
+    'weight_fname' : 'weights_2D.npz',
+    'metric_fname' :'metrics_2D.jsonl'},
 
     {'dims' : 3,
     'test_fname' : r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_1D_test.tar',
     'train_fname': r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_level15_nj_dis.tar',
-    'weight_fname' : 'weights_nojitter_1D.tar.npz',
-    'metric_fname' :'metrics_nojitter_1D.tar.jsonl'},
+    'weight_fname' : 'weights_nojitter_1D.npz',
+    'metric_fname' :'metrics_nojitter_1D.jsonl'},
 ]
 cfg={
     'batch_size' : 32,
