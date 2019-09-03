@@ -5,9 +5,9 @@ lr_schedule3D = { 0: 0.001,
                 400000: 0.00005,
                 600000: 0.00001,
                 }
-lr_schedule2D = { 0: 0.002,
+lr_schedule2D = { 0: 0.001,
                 60000: 0.0001,
-                400000: 0.00005,
+                400000: 0.0001,
                 600000: 0.00001,
                 }
 lr_schedule1D = { 0: 0.002,
@@ -57,11 +57,6 @@ cfg={
 
 }
 
-conv_size={
-    'size90':[1,5,3,3,2],
-    'size99':[1,3,3,3,3]
-
-}
 
 def get_model():
     n_channels, n_classes, n_levels, n_rings , dim_value = \
@@ -71,20 +66,8 @@ def get_model():
     dims=metric[1]['dims'] # change the index when changing input dims
     n_filters=cfg[' n_filters']
     shape = (None, 1, n_levels,n_rings, dims)
-    fw=conv_size['size99']
 
     l_in = lasagne.layers.InputLayer(shape=shape)
-    '''    
-    l_conv1=lasagne.layers.Conv1DLayer(
-            incoming=l_in,
-            num_filters=1,
-            filter_size=3,
-            stride=3,
-            pad='valid'
-        )
-    '''
-
-
     '''
     Ring level feature abstracted
     '''
@@ -93,85 +76,83 @@ def get_model():
         shape= ((-1, 1,n_rings,dims)),
         name= 'shape'
     )
-
-    l_conv=lasagne.layers.Conv2DLayer(
+    l_conv1=lasagne.layers.Conv2DLayer(
         incoming=l_shape,
         num_filters=n_filters,
         filter_size=(1, dims),
         stride=(1,1),
         pad='valid',
-        name= 'conv0',
-        # nonlinearity=activations.leaky_relu_001
-
-    )
-
-    l_conv1=lasagne.layers.Conv2DLayer(
-        incoming=l_conv,
-        num_filters=n_filters,
-        filter_size=(1, 1),
-        stride=(1,1),
-        pad='valid',
         name= 'conv1',
         # nonlinearity=activations.leaky_relu_001
-
     )
+    #
+    # l_conv2=lasagne.layers.Conv2DLayer(
+    #     incoming=l_conv1,
+    #     num_filters=n_filters,
+    #     filter_size=(1, 1),
+    #     stride=(1,1),
+    #     pad='valid',
+    #     name= 'conv2',
+    #     # nonlinearity=activations.leaky_relu_001
+    #
+    # )
+    #
+    # l_drop1 = lasagne.layers.DropoutLayer(
+    #     incoming = l_conv1,
+    #     p = 0.2,
+    #     name = 'drop1'
+    #     )
+    # l_conv3=lasagne.layers.Conv2DLayer(
+    #     incoming=l_drop1,
+    #     num_filters=n_filters,
+    #     filter_size=(1, 1),
+    #     stride=(1,1),
+    #     pad='valid',
+    #     name='conv3',
+    #     # nonlinearity = activations.leaky_relu_001
+    # )
 
-    l_drop1 = lasagne.layers.DropoutLayer(
-        incoming = l_conv1,
-        p = 0.2,
-        name = 'drop1'
-        )
-    l_conv2=lasagne.layers.Conv2DLayer(
-        incoming=l_drop1,
-        num_filters=n_filters,
-        filter_size=(1, 1),
-        stride=(1,1),
-        pad='valid',
-        name='conv2',
-        # nonlinearity = activations.leaky_relu_001
-    )
-
-    l_drop2 = lasagne.layers.DropoutLayer(
-        incoming = l_conv2,
-        p = 0.3,
-        name = 'drop2',
-        )
-    l_conv3=lasagne.layers.Conv2DLayer(
-        incoming=l_drop2,
-        num_filters=n_filters,
-        filter_size=(1, 1),
-        stride=(1,1),
-        pad='valid',
-        name='conv3',
-        # nonlinearity = activations.leaky_relu_001
-    )
-
-    l_conv4=lasagne.layers.Conv2DLayer(
-        incoming=l_conv3,
-        num_filters=2*n_filters,
-        filter_size=(1, 1),
-        stride=(1,1),
-        pad='valid',
-        name='conv4',
-        # nonlinearity=activations.leaky_relu_001
-    )
+    # l_drop2 = lasagne.layers.DropoutLayer(
+    #     incoming = l_conv1,
+    #     p = 0.3,
+    #     name = 'drop2',
+    #     )
+    # l_conv4=lasagne.layers.Conv2DLayer(
+    #     incoming=l_drop2,
+    #     num_filters=n_filters,
+    #     filter_size=(1, 1),
+    #     stride=(1,1),
+    #     pad='valid',
+    #     name='conv4',
+    #     # nonlinearity = activations.leaky_relu_001
+    # )
+    #
     l_conv5=lasagne.layers.Conv2DLayer(
-        incoming=l_conv4,
-        num_filters=512,
+        incoming=l_conv1,
+        num_filters=2*n_filters,
         filter_size=(1, 1),
         stride=(1,1),
         pad='valid',
         name='conv5',
         # nonlinearity=activations.leaky_relu_001
     )
-    l_ds1=lasagne.layers.DimshuffleLayer(
+    l_conv6=lasagne.layers.Conv2DLayer(
         incoming=l_conv5,
+        num_filters=256,
+        filter_size=(1, 1),
+        stride=(1,1),
+        pad='valid',
+        name='conv6',
+        # nonlinearity=activations.leaky_relu_001
+    )
+    l_ds1=lasagne.layers.DimshuffleLayer(
+        incoming=l_conv6,
         pattern=(0,3,1,2),
         name='ds1'
     )
     l_pool1=lasagne.layers.MaxPool2DLayer(
         incoming=l_ds1,
-        pool_size=(512,1),
+        pool_size=(256,1),
         name='pool1'
     )
     # -------------shape n*1*nrings------------------------
@@ -193,33 +174,33 @@ def get_model():
     #     name='conv11',
     #     # nonlinearity=activations.leaky_relu_001
     # )
-    l_fc10 = lasagne.layers.DenseLayer(
+    l_fc1 = lasagne.layers.DenseLayer(
         incoming=l_shape2,
         num_units=1024,
         W=lasagne.init.Normal(std=0.01),
-        name= 'fc10',
+        name= 'fc1',
 
     )
-    l_fc11 = lasagne.layers.DenseLayer(
-        incoming=l_fc10,
+    l_fc2 = lasagne.layers.DenseLayer(
+        incoming=l_fc1,
         num_units=512,
         W=lasagne.init.Normal(std=0.01),
-        name= 'fc11',
+        name= 'fc2',
 
     )
-    l_fc12 = lasagne.layers.DenseLayer(
-        incoming=l_fc11,
+    l_fc3 = lasagne.layers.DenseLayer(
+        incoming=l_fc2,
         num_units=128,
         W=lasagne.init.Normal(std=0.01),
-        name= 'fc12'
+        name= 'fc3'
 
     )
-    l_fc13 = lasagne.layers.DenseLayer(
-        incoming=l_fc12,
+    l_fc4 = lasagne.layers.DenseLayer(
+        incoming=l_fc3,
         num_units=n_classes,
         W=lasagne.init.Normal(std=0.01),
-        name= 'fc13'
+        name= 'fc4'
 
     )
 
-    return {'l_in':l_in,'l_out':l_fc13}
+    return {'l_in':l_in,'l_out':l_fc4}
