@@ -130,8 +130,8 @@ def get_model():
     l_conv5=lasagne.layers.Conv2DLayer(
         incoming=l_conv1,
         num_filters=2*n_filters,
-        filter_size=(1, 1),
-        stride=(1,1),
+        filter_size=(3, 1),
+        stride=(3,1),
         pad='valid',
         name='conv5',
         # nonlinearity=activations.leaky_relu_001
@@ -139,8 +139,8 @@ def get_model():
     l_conv6=lasagne.layers.Conv2DLayer(
         incoming=l_conv5,
         num_filters=256,
-        filter_size=(1, 1),
-        stride=(1,1),
+        filter_size=(3, 1),
+        stride=(3,1),
         pad='valid',
         name='conv6',
         # nonlinearity=activations.leaky_relu_001
@@ -162,7 +162,7 @@ def get_model():
     '''
     l_shape2 = lasagne.layers.reshape(
         incoming=l_pool1,
-        shape=((-1,n_levels,n_rings)),
+        shape=((-1,n_levels,n_rings/9)),
         name='shape2'
     )
     # l_conv11=lasagne.layers.Conv2DLayer(

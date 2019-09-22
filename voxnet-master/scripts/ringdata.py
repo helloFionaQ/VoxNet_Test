@@ -23,9 +23,7 @@ output: 2D plane of array
 '''
 V_VALID = -1
 LEVEL_SIZE = config.cfg['n_levels']
-DIM = 32
-
-dim = config.cfg['dims'][0]
+dim = 32
 RING_SIZE = config.cfg['n_rings']
 
 
@@ -196,6 +194,11 @@ def get_vector(a, b):
     return v
 
 
+def get_vector_3D(a, b):
+    v = ((a[0] - b[0]), (a[1] - b[1]),0)
+    return v
+
+
 '''
 main function
 input : the chunk voxel data arrays ( for example 2048 * 32*32*32 chunk_size , dimension) 
@@ -297,4 +300,83 @@ def load_data(array):
         ls_cors.append(lt)
     arr_cors = np.array(ls_cors, dtype=np.float32)
     arr_cors = arr_cors.reshape((-1, 1,LEVEL_SIZE, RING_SIZE, 3))
+    return arr_cors
+
+def load_data_new(array):
+    ls_cors = []
+    chunk_size = array.shape[0]
+    for index in range(chunk_size):  # for each model
+        if index % 128 == 0:
+            print 'the', index, 'model is preparing'
+        lt = []  # l - levels in every model
+        x = array[index, 0, :]
+        for z in range(dim):  # for each level
+
+            ar_p = get_plane(x, z)
+            if ar_p == []:
+                continue
+            ar_e, ls_e, ls_eo = get_edge(ar_p, z)
+            # get center point
+            cor_center = get_centerpoint_axis(ls_eo)
+            # use dot operator
+            # sorted the coordinate sequence
+            ls_cos = []
+            ls_cor = []
+            for cor in ls_eo:
+                if cor == cor_center:  # when the center point and the point  are coincide , set the cos value 1
+                    ls_cos.append((cor, 1))
+                    continue
+                cos = calcu_cos(get_vector(cor, cor_center), (0, -1))
+                sign = np.dot(np.cross((0, -1, 0), get_vector_3D(cor, cor_center)), (cor_center[0], cor_center[1], 1))
+                if sign<0:
+                    cv=-cos-2
+                elif sign>=0:
+                    cv=cos
+                ls_cos.append((cor, cv))
+            ls_sort = sorted(ls_cos, key=lambda x: x[1], reverse=True)
+            for i in ls_sort:
+                ls_cor.append(i[0])
+            # set looping
+            l = len(ls_cor)
+            if l < RING_SIZE:
+                for i in range(RING_SIZE - l):
+                    ls_cor.append(ls_cor[i])
+            elif l > RING_SIZE:
+                raise Exception("RING_SIZE is not big enough .The ring size here :", l, " index:", index, " z : ",
+                                z)
+            if len(ls_cor) != RING_SIZE:
+                raise Exception("Size erro here : length", len(ls_cor), " index:", index, " z : ", z)
+            lt.append(ls_cor)
+
+        # extend the levels which is not enough
+        flag = 0
+        while len(lt) < LEVEL_SIZE:
+            lt.insert(-flag, lt[-flag])
+            flag = (flag + 1) % 2
+
+        # delete the levels which is too enough
+        flag = -1
+        while len(lt) > LEVEL_SIZE:
+            # step1 : delete the coinsided elements
+            if flag == -1:
+                flag = 0
+                for ix, x in enumerate(lt):
+
+                    if ix == len(lt) - 2:
+                        break
+                    if lt[ix] == lt[ix + 1]:
+                        lt.pop(ix + 1)
+                    if len(lt) == LEVEL_SIZE:
+                        break
+            # if step 1 is not enough ,delete the elements from start and end
+            else:
+                lt.pop(-flag)
+                flag = (flag + 1) % 2
+
+        if len(lt) != LEVEL_SIZE:
+            raise Exception("the length of level is wrong:" + len(lt))
+
+        ls_cors.append(lt)
+    arr_cors = np.array(ls_cors, dtype=np.float32)
+    arr_cors = arr_cors.reshape((-1, 1, LEVEL_SIZE, RING_SIZE, 3))
     return arr_cors

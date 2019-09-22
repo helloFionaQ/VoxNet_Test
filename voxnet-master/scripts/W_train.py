@@ -16,11 +16,12 @@ import voxnet
 import config
 import ringdata
 from voxnet import npytar
-
+import test
 #import pyvox
-fname = r'/home/haha/Documents/PythonPrograms/Ring_Conv/ring_data_level15_nj_nz.tar'
-weight_name='weights_level15_nj_nz.npz'
-metric_fname='metrics.jsonl'
+dims=2
+fname = config.metric[dims-1]['train_fname']
+weight_name=config.metric[dims-1]['weight_fname']
+metric_fname=config.metric[dims-1]['metric_fname']
 
 def make_training_functions(cfg, model):
 
@@ -52,6 +53,7 @@ def make_training_functions(cfg, model):
         learning_rate = theano.shared(np.float32(cfg['learning_rate'][0]))
     else:
         learning_rate = theano.shared(np.float32(cfg['learning_rate']))
+
 
     softmax_out = T.nnet.softmax( out )
     loss = T.cast(T.mean(T.nnet.categorical_crossentropy(softmax_out, y)), 'float32')
@@ -95,33 +97,11 @@ def make_training_functions(cfg, model):
             }
     return tfuncs, tvars
 
-
-#抖动加强
-def jitter_chunk(src, cfg):
-    dst = src.copy()
-    # 二项分布
-    if np.random.binomial(1, .2):
-        dst[:, :, ::-1, :, :] = dst
-    if np.random.binomial(1, .2):
-        dst[:, :, :, ::-1, :] = dst
-    max_ij = cfg['max_jitter_ij']
-    max_k = cfg['max_jitter_k']
-    shift_ijk = [np.random.random_integers(-max_ij, max_ij),
-                 np.random.random_integers(-max_ij, max_ij),
-                 np.random.random_integers(-max_k, max_k)]
-    for axis, shift in enumerate(shift_ijk):
-        if shift != 0:
-            # beware wraparound
-            dst = np.roll(dst, shift, axis+2)
-    return dst
-
 # 读取数据
 def data_loader(cfg):
-
-    dims = cfg['dims']
     # the number for reading each time
     chunk_size = cfg['batch_size']*cfg['batches_per_chunk']
-    xc = np.zeros((chunk_size, cfg['n_channels'],cfg['n_levels'],cfg['n_rings'],2), dtype=np.float32)
+    xc = np.zeros((chunk_size, cfg['n_channels'],cfg['n_levels'],cfg['n_rings'],dims), dtype=np.float32)
 
     reader = npytar.NpyTarReader(fname)
     yc = []
@@ -167,7 +147,7 @@ def main():
             num_batches = len(x_shared)//cfg['batch_size']
             tvars['X_shared'].set_value(x_shared, borrow=True)
             tvars['y_shared'].set_value(y_shared, borrow=True)
-            lvs,accs = [],[]
+            lvs, accs = [],[]
             for bi in xrange(num_batches):
                 lv = tfuncs['update_iter'](bi)
                 lvs.append(lv)
@@ -176,6 +156,7 @@ def main():
                 itr += 1
             loss, acc = float(np.mean(lvs)), float(np.mean(acc))
             print 'epoch: {}, itr: {}, loss: {}, acc: {}'.format(epoch, itr, loss, acc)
+
             mlog.log(epoch=epoch, itr=itr, loss=loss, acc=acc)
 
             if isinstance(cfg['learning_rate'], dict) and itr > 0:
@@ -189,6 +170,11 @@ def main():
                 voxnet.checkpoints.save_weights(weight_name, model['l_out'],
                                                 {'itr': itr, 'ts': time.time()})
                 last_checkpoint_itr = itr
+
+        if epoch%10 == 9:
+            voxnet.checkpoints.save_weights(weight_name, model['l_out'],
+                                            {'itr': itr, 'ts': time.time()})
+            test.main()
 
 
     print 'training done'
