@@ -114,7 +114,7 @@ def main():
     print('normal acc = {}, macro_recall = {}'.format(acc, macro_recall))
     end_time = time.time()
     print 'running time : ', (end_time - start_time), 'secs'
-    # print 'gnd:',calcu1,'   yhat',calcu2
+    print 'gnd:',calcu1,'   yhat',calcu2
 
     if out_fname is not None:
         logging.info('saving predictions to {}'.format(out_fname))
