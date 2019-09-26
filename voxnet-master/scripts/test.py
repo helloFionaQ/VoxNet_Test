@@ -60,7 +60,8 @@ def make_test_functions(cfg, model):
 
 #感觉像是把体素数据转换成卷积操作数据 转化成对应数据-标签的形式
 def data_loader(cfg):
-    chunk_size = cfg['n_rotations']
+    # chunk_size = cfg['n_rotations']
+    chunk_size =48
     # 第一个参数 shape 是一个元组 +代表元组的拼接
     # 如果元组的元素只有一个值的时候需要在值的后面加上逗号，否则括号会被误识别
     xc = np.zeros((chunk_size, cfg['n_channels'],cfg['n_levels'],cfg['n_rings'],dims), dtype=np.float32)
