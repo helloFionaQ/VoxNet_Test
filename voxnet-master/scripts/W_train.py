@@ -16,7 +16,7 @@ import voxnet
 import config
 import ringdata
 from voxnet import npytar
-import test
+
 #import pyvox
 dims=2
 fname = config.metric[dims-1]['train_fname']
@@ -156,7 +156,6 @@ def main():
                 itr += 1
             loss, acc = float(np.mean(lvs)), float(np.mean(acc))
             print 'epoch: {}, itr: {}, loss: {}, acc: {}'.format(epoch, itr, loss, acc)
-
             mlog.log(epoch=epoch, itr=itr, loss=loss, acc=acc)
 
             if isinstance(cfg['learning_rate'], dict) and itr > 0:
@@ -170,11 +169,6 @@ def main():
                 voxnet.checkpoints.save_weights(weight_name, model['l_out'],
                                                 {'itr': itr, 'ts': time.time()})
                 last_checkpoint_itr = itr
-
-        if epoch%10 == 9:
-            voxnet.checkpoints.save_weights(weight_name, model['l_out'],
-                                            {'itr': itr, 'ts': time.time()})
-            test.main()
 
 
     print 'training done'
