@@ -1,0 +1,70 @@
+Model shape: 15 * 99 * 3, Network : 6conv(512) 1fc(512) 4fc
+Training file : ringdata_02_train.tar
+Compiling theano functions...
+Training...
+epoch: 0, itr: 64, loss: 2.98696804047, acc: 0.2177734375
+epoch: 0, itr: 128, loss: 2.96238422394, acc: 0.220703125
+epoch: 0, itr: 192, loss: 2.93483042717, acc: 0.23046875
+epoch: 0, itr: 256, loss: 2.91923165321, acc: 0.22021484375
+epoch: 0, itr: 320, loss: 2.90540027618, acc: 0.2216796875
+epoch: 0, itr: 384, loss: 2.88930797577, acc: 0.21826171875
+epoch: 0, itr: 448, loss: 2.86991786957, acc: 0.23681640625
+epoch: 0, itr: 512, loss: 2.86284160614, acc: 0.21484375
+epoch: 0, itr: 576, loss: 2.84672236443, acc: 0.236328125
+epoch: 0, itr: 640, loss: 2.81945633888, acc: 0.232421875
+epoch: 0, itr: 704, loss: 2.84075832367, acc: 0.19873046875
+epoch: 0, itr: 768, loss: 2.8041062355, acc: 0.205078125
+epoch: 0, itr: 832, loss: 2.8097319603, acc: 0.21923828125
+epoch: 0, itr: 896, loss: 2.79902648926, acc: 0.23486328125
+epoch: 0, itr: 960, loss: 2.78146576881, acc: 0.2294921875
+epoch: 0, itr: 1024, loss: 2.80002689362, acc: 0.21728515625
+epoch: 0, itr: 1088, loss: 2.76742386818, acc: 0.2314453125
+epoch: 0, itr: 1152, loss: 2.74755549431, acc: 0.232421875
+epoch: 0, itr: 1216, loss: 2.67710781097, acc: 0.24267578125
+epoch: 0, itr: 1280, loss: 2.58798122406, acc: 0.31103515625
+epoch: 0, itr: 1344, loss: 2.33544492722, acc: 0.45458984375
+epoch: 0, itr: 1408, loss: 2.09682226181, acc: 0.54931640625
+epoch: 0, itr: 1472, loss: 2.03087759018, acc: 0.57470703125
+epoch: 0, itr: 1497, loss: 1.99341762066, acc: 0.57875
+epoch: 1, itr: 1561, loss: 1.89346051216, acc: 0.626953125
+epoch: 1, itr: 1625, loss: 1.84432339668, acc: 0.63037109375
+epoch: 1, itr: 1689, loss: 1.79452681541, acc: 0.64990234375
+epoch: 1, itr: 1753, loss: 1.75742340088, acc: 0.65966796875
+epoch: 1, itr: 1817, loss: 1.66659486294, acc: 0.68994140625
+epoch: 1, itr: 1881, loss: 1.64548420906, acc: 0.6962890625
+epoch: 1, itr: 1945, loss: 1.67742538452, acc: 0.68212890625
+epoch: 1, itr: 2009, loss: 1.58652126789, acc: 0.7158203125
+epoch: 1, itr: 2073, loss: 1.59225773811, acc: 0.7138671875
+epoch: 1, itr: 2137, loss: 1.60326910019, acc: 0.7041015625
+epoch: 1, itr: 2201, loss: 1.54646718502, acc: 0.7216796875
+epoch: 1, itr: 2265, loss: 1.47181177139, acc: 0.7548828125
+epoch: 1, itr: 2329, loss: 1.52412390709, acc: 0.7373046875
+epoch: 1, itr: 2393, loss: 1.50920534134, acc: 0.74365234375
+epoch: 1, itr: 2457, loss: 1.48028159142, acc: 0.748046875
+epoch: 1, itr: 2521, loss: 1.51197814941, acc: 0.73291015625
+epoch: 1, itr: 2585, loss: 1.45472800732, acc: 0.74951171875
+epoch: 1, itr: 2649, loss: 1.44951462746, acc: 0.75341796875
+epoch: 1, itr: 2713, loss: 1.39427483082, acc: 0.7734375
+epoch: 1, itr: 2777, loss: 1.42593574524, acc: 0.75341796875
+epoch: 1, itr: 2841, loss: 1.47155714035, acc: 0.75
+epoch: 1, itr: 2905, loss: 1.43324565887, acc: 0.76123046875
+epoch: 1, itr: 2969, loss: 1.40204000473, acc: 0.7666015625
+epoch: 1, itr: 2994, loss: 1.43624937534, acc: 0.75
+epoch: 2, itr: 3058, loss: 1.38967251778, acc: 0.7646484375
+epoch: 2, itr: 3122, loss: 1.50571846962, acc: 0.7373046875
+epoch: 2, itr: 3186, loss: 1.39230597019, acc: 0.77197265625
+epoch: 2, itr: 3250, loss: 1.38770222664, acc: 0.77490234375
+epoch: 2, itr: 3314, loss: 1.34005916119, acc: 0.7783203125
+epoch: 2, itr: 3378, loss: 1.31993770599, acc: 0.79052734375
+epoch: 2, itr: 3442, loss: 1.390188694, acc: 0.765625
+epoch: 2, itr: 3506, loss: 1.31297636032, acc: 0.798828125
+epoch: 2, itr: 3570, loss: 1.28880572319, acc: 0.798828125
+epoch: 2, itr: 3634, loss: 1.34510469437, acc: 0.78173828125
+epoch: 2, itr: 3698, loss: 1.31006407738, acc: 0.7919921875
+epoch: 2, itr: 3762, loss: 1.23038947582, acc: 0.8193359375
+epoch: 2, itr: 3826, loss: 1.27663934231, acc: 0.80126953125
+epoch: 2, itr: 3890, loss: 1.28544557095, acc: 0.80029296875
+epoch: 2, itr: 3954, loss: 1.27212631702, acc: 0.802734375
+epoch: 2, itr: 4018, loss: 1.2759077549, acc: 0.79541015625
+Model saved
+Testing on checkpoint

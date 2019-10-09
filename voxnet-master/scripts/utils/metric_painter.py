@@ -1,0 +1,15 @@
+import pandas as pd
+def drawer(plt,y_l,y_a,x_i):
+	plt.clf()
+	plt.figure(1)
+	ax1 = plt.subplot(2, 2, 1)
+	ax2 = plt.subplot(2, 2, 2)
+	plt.sca(ax1)
+	plt.plot(x_i, y_l, label='loss')
+	plt.xlabel('iteration')
+	plt.legend()
+	plt.sca(ax2)
+	plt.plot(x_i, y_a, label='accuracy')
+	plt.xlabel('iteration')
+	plt.legend()
+	plt.pause(0.1)
